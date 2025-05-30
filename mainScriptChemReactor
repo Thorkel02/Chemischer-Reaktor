@@ -1,19 +1,39 @@
 clearvars;
+% erstellen einer globalen Cell-Array-Structure
+global r_const
+r_const = struct('k',{1, 1.5});
 
-% erstellen einer Cell-Array-Structure
-r_const = struct('k',{5, 10});
-
-% ersetllen des Input Fensters
-conc = inputdlg('Gib die Konzentrationen ein (Konzentration 1, Konzentration 2, ...) ',...
+% ersetllen des Input Fensters für die Anfangskonzentrationen
+c0 = inputdlg('Gib die Konzentrationen ein (cA, cB, ...) ',...
                        'Konzentrationen', [1 50]);
 
 % Umwandlung in numerisches Array
-conc = str2num (conc {1}); % {1} muss da sein weil er einen string erwartet und es bei uns die eine cell ist 
+c0 = str2num (c0 {1}); % {1} muss da sein weil er einen string erwartet und es bei uns die eine cell ist 
 % -> deswegen greift er dann mit dem 1er nur auf den Inhalt der ertsen Zeile der Cell zu
 
 
-if isempty(conc) % um zu Kontrollieren ob es eine gültige Eingabe gab 
+if isempty(c0) % um zu Kontrollieren ob es eine gültige Eingabe gab 
     % -> str2num gibt leeren Vektor wenn die Umwandlung nicht geht
     msgbox('Ungültige Eingabe für Konzentrationen!');
 end
+
+tspan = [0 10];
+
+ %Zeitspanne für ode45 Funktion
+
+ [t, c] = ode45(@rxn, tspan, c0);
+
+ % Plot der Konzentrationsverläufe
+figure;
+plot(t, c(:,1), '-r', 'DisplayName', 'c_A');
+hold on;
+plot(t, c(:,2), '-g', 'DisplayName', 'c_B');
+plot(t, c(:,3), '-b', 'DisplayName', 'c_C');
+plot(t, c(:,4), '-k', 'DisplayName', 'c_D');
+xlabel('Zeit [s]');
+ylabel('Konzentration [mol/m^3]');
+title('Zeitlicher Verlauf der Konzentrationen');
+legend('Location', 'best');
+grid on;
+
 
