@@ -1,0 +1,29 @@
+function[dcdt]=rxn(t,c0)
+
+%Zugriff auf die globale Variable bekommen%
+global r_const
+
+rate=@(k,c0) k*prod(c0);
+%Anonyme Funktion zur Berechnung der Reaktionsraten
+
+r1=rate(r_const(1).k,prod(c0(1:2)));
+
+r2=rate(r_const(2).k,prod(c0(2:3)));
+
+%%Stoffbilanzgleichungen%%
+ dcdt=zeros(4,1);
+ %ode45 braucht einen Zeilenvektor als Eingabeparameter
+
+ %Konzentration A
+ dcdt(1)=-r1;
+
+ %Konzentration B
+ dcdt(2)=-r1-r2;
+
+  %Konzentration C
+ dcdt(3)=+r1-r2;
+
+  %Konzentration D
+ dcdt(4)=r2;
+
+end
