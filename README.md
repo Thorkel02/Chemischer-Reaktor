@@ -25,4 +25,8 @@ Jakob Brettschneider, Valentin Steinwender, Thomas Klimisch
 
 Das folgende Anwendungsbeispiel beschäftigt sich mit chemischer Reaktionskinematik. Es wird eine einfache chemische Reaktion betrachtet, die in zwei aufeinanderfolgenden Schritten abläuft. Dabei wird angenommen, dass keine Rückreaktion stattfindet:
 
+## 2. konkretes Beispiel für Überprüfung
+
+Im ersten Schritt soll überprüft werden, ob die rxn Funktion richtig funktioniert. c(t=0) = 0 als Test
+
 
