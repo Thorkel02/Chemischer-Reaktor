@@ -5,13 +5,11 @@ r_const = struct('k',{1, 1.5});
 
 c0 = [1, 1, 0, 0]; %%Eingabe der Konzentrationen in mol/l
 
-%Abbruch der Berechnung + Fehlermeldung wenn c0 ein falsches Format hat
 if length(c0) < 4
     error('Ungültige Eingabe für Konzentrationen!');
 end
 
-tspan = [0 10]; %%Annahme einer Zeitspanne für ode 45, 
-% benötigt Zeit und Konzentrationen als input
+tspan = [0 10];
 
  [t, c] = ode45(@rxn, tspan, c0);
 
@@ -19,7 +17,6 @@ tspan = [0 10]; %%Annahme einer Zeitspanne für ode 45,
  idx99_5= find(c(:,2) <=0.005, 1);
  t99_5 = t(idx99_5);
 
- %Formatierung von t und runden auf 2 Nachkommastellen für die Ausgabe
  fprintf('Zeit bis 99.5%% Umsetzung von Edukten: %.2f s\n', t99_5);
 
 % Erneut simulieren mit angepasstem tspan
@@ -38,7 +35,6 @@ title('Zeitlicher Verlauf der Konzentrationen');
 legend('Location', 'northeast');
 grid on;
 
-% Plot als PNG speichern mit 300 dots per inch
 exportgraphics(gcf, 'Konzentrationsverlauf.png', 'Resolution', 300);
 
 % Header für Cell Array
@@ -48,8 +44,7 @@ reaction_data = {
     'max_C', 'max_D', 'min_A', 'min_B', 'selectivity_C', 'Conversion_of_A',...
     'Time_needed_for_99,5_conversion_of_B'};
 
-% Zeilenweises befüllen der Cell Array mit Ergebnissen
-row = 2;  % Start ab zweiter Zeile (erste ist Header)
+row = 2; 
 
 for pct = 0:10:80
 
@@ -57,13 +52,11 @@ for pct = 0:10:80
     c0_var = c0;
     c0_var(1) = c0_var(1) * (1 + pct/100);
 
-     % Erste grobe Simulation zur Bestimmung von t99_5_var
-    [t_temp, c_temp] = ode45(@rxn, [0 20], c0_var);  % 20 s als grobe Obergrenze
+     % Erste grobe Simulation
+    [t_temp, c_temp] = ode45(@rxn, [0 20], c0_var); 
 
-    % Index finden, bei dem c_B <= 0.005 erfüllt ist
     idx99_5_var = find(c_temp(:,2) <= 0.005, 1);
 
-    % Extrahieren der benötigten Zeit
     t99_5_var = t_temp(idx99_5_var);
 
     % Zweite, Simulation mit neuem tspan = [0 t99_5_var]
@@ -82,16 +75,11 @@ for pct = 0:10:80
     reaction_data{row,10} = max(c_var(:,4));
     reaction_data{row,11} = min(c_var(:,1));
     reaction_data{row,12} = min(c_var(:,2));
-
-    % Selektivität in Bezug auf C berechnen und speichern
     reaction_data{row,13} = c_var(end,3) / (c_var(end,3) + c_var(end,4));
-    
-    % Umsatz im Bezug auf A berechnen und speichern 
     reaction_data{row,14} = (c0_var(1)-c_var(end,1))/c0_var(1)*100;
     reaction_data{row,15} = t99_5_var;
 
     row = row + 1;
 end
 
-% In Excel schreiben
 writecell(reaction_data, 'reaction_results.xlsx');
