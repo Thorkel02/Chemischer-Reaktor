@@ -3,34 +3,24 @@ clearvars;
 global r_const
 r_const = struct('k',{1, 1.5});
 
-% ersetllen des Input Fensters für die Anfangskonzentrationen
-     %c0 = inputdlg('Gib die Konzentrationen ein (cA, cB, ...) ',...
-                   %    'Konzentrationen', [1 50]);
+c0 = [1, 1, 0, 0]; %%Eingabe der Konzentrationen in mol/l
 
-% Umwandlung in numerisches Array
-      %c0 = str2num (c0 {1}); % {1} muss da sein weil er einen string erwartet und es bei uns die eine cell ist
-% -> deswegen greift er dann mit dem 1er nur auf den Inhalt der ertsen Zeile der Cell zu
-c0 = [1, 1, 0, 0]; %%konzentrationen in mol
-
-if isempty(c0) % um zu Kontrollieren ob es eine gültige Eingabe gab
-    % -> str2num gibt leeren Vektor wenn die Umwandlung nicht geht
-    msgbox('Ungültige Eingabe für Konzentrationen!');
+if length(c0) < 4
+    error('Ungültige Eingabe für Konzentrationen!');
 end
 
 tspan = [0 10];
 
- %Zeitspanne für ode45 Funktion
-
  [t, c] = ode45(@rxn, tspan, c0);
 
- %Bestimmen der Integrationsdauer
- idx99= find(c(:,2) <=0.005, 1);
- t99 = t(idx99);
+ %Bestimmen der zeit bis 99,5% von B umgestzt sind
+ idx99_5= find(c(:,2) <=0.005, 1);
+ t99_5 = t(idx99_5);
 
- fprintf('Zeit bis 99.5%% Umsetzung von Edukten: %.2f s\n', t99);
+ fprintf('Zeit bis 99.5%% Umsetzung von Edukten: %.2f s\n', t99_5);
 
 % Erneut simulieren mit angepasstem tspan
-[t, c] = ode45(@rxn, [0 t99], c0);
+[t, c] = ode45(@rxn, [0 t99_5], c0);
 
  % Plot der Konzentrationsverläufe
 figure;
@@ -45,26 +35,51 @@ title('Zeitlicher Verlauf der Konzentrationen');
 legend('Location', 'northeast');
 grid on;
 
-for pct = 10:10:80
+exportgraphics(gcf, 'Konzentrationsverlauf.png', 'Resolution', 300);
+
+% Header für Cell Array
+reaction_data = {
+    'A_start_conc.','B_start_conc.', 'C_start_conc.', 'D_start_conc.',...
+    'A_final_conc.', 'B_final_conc.', 'C_final_conc.', 'D_final_conc.',...
+    'max_C', 'max_D', 'min_A', 'min_B', 'selectivity_C', 'Conversion_of_A',...
+    'Time_needed_for_99,5_conversion_of_B'};
+
+row = 2; 
+
+for pct = 0:10:80
+
+    % Anfangskonzentration von A variieren
     c0_var = c0;
-    c0_var(1) = c0_var(1) * (1 + pct/100); % A erhöhen
+    c0_var(1) = c0_var(1) * (1 + pct/100);
 
-    [t_var, c_var] = ode45(@rxn, [0 t99], c0_var);  % KEIN kStruct!
+     % Erste grobe Simulation
+    [t_temp, c_temp] = ode45(@rxn, [0 20], c0_var); 
 
-    % Selektivität berechnen
-    SC = c_var(end,3) / (c_var(end,3) + c_var(end,4));
+    idx99_5_var = find(c_temp(:,2) <= 0.005, 1);
 
-    % Ergebnisse speichern
-    variation(pct/10).A_start = c0_var(1);
-    variation(pct/10).final_conc = c_var(end,:);
-    variation(pct/10).selectivity_C = SC;
-    variation(pct/10).max_C = max(c_var(:,3));
-    variation(pct/10).max_D = max(c_var(:,4));
-    variation(pct/10).min_B = min(c_var(:,2));
+    t99_5_var = t_temp(idx99_5_var);
+
+    % Zweite, Simulation mit neuem tspan = [0 t99_5_var]
+    [t_var, c_var] = ode45(@rxn, [0 t99_5_var], c0_var);
+
+    % Werte in Cell Array speichern
+    reaction_data{row,1}  = c0_var(1);
+    reaction_data{row,2}  = c0_var(2);
+    reaction_data{row,3}  = c0_var(3);
+    reaction_data{row,4}  = c0_var(4);
+    reaction_data{row,5}  = c_var(end,1);
+    reaction_data{row,6}  = c_var(end,2);
+    reaction_data{row,7}  = c_var(end,3);
+    reaction_data{row,8}  = c_var(end,4);
+    reaction_data{row,9}  = max(c_var(:,3));
+    reaction_data{row,10} = max(c_var(:,4));
+    reaction_data{row,11} = min(c_var(:,1));
+    reaction_data{row,12} = min(c_var(:,2));
+    reaction_data{row,13} = c_var(end,3) / (c_var(end,3) + c_var(end,4));
+    reaction_data{row,14} = (c0_var(1)-c_var(end,1))/c0_var(1)*100;
+    reaction_data{row,15} = t99_5_var;
+
+    row = row + 1;
 end
 
-
-
-
-save('ergebnisse_variationen.mat', 'variation');
-
+writecell(reaction_data, 'reaction_results.xlsx');
