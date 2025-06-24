@@ -1,6 +1,6 @@
 %Autoren: Valentin Steinwender, Thomas Klimisch, Jakob Bretschneider
 %Version 1.6.1
-%License: 
+%License:MIT License
 
 clearvars;
 % erstellen einer globalen Cell-Array-Structure
