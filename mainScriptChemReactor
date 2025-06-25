@@ -9,6 +9,8 @@ r_const = struct('k',{1, 1.5});
 
 c0 = [1, 1, 0, 0]; %%Eingabe der Konzentrationen in mol/l
 
+cb_end=0.005;
+
 if length(c0) < 4
     error('Ungültige Eingabe für Konzentrationen!');
 end
@@ -16,9 +18,11 @@ end
 tspan = [0 10];
 
  [t, c] = ode45(@rxn, tspan, c0);
+ 
+cb=c(:,2);
 
  %Bestimmen der zeit bis 99,5% von B umgestzt sind
- idx99_5= find(c(:,2) <=0.005, 1);
+ idx99_5= find(cb <=cb_end, 1);
  t99_5 = t(idx99_5);
 
  fprintf('Zeit bis 99.5%% Umsetzung von Edukten: %.2f s\n', t99_5);
